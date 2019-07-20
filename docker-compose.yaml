@@ -42,9 +42,9 @@ services:
       - 3000:8043
     environment:
       - CONFIG_VARS=REACT_APP_API_URL,REACT_APP_WS_URL,REACT_APP_NODE_URL,REACT_APP_NOVA_PROXY_ADDRESS,REACT_APP_NOVA_TOKEN_ADDRESS,REACT_APP_WETH_TOKEN_ADDRESS,REACT_APP_NETWORK_ID
-      - REACT_APP_API_URL=http://api:3001
-      - REACT_APP_WS_URL=ws://ws:3002
-      - REACT_APP_NODE_URL=http://ethereum-node:8545
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3002
+      - REACT_APP_NODE_URL=http://localhost:8545
       - REACT_APP_NOVA_PROXY_ADDRESS=0x04f67e8b7c39a25e100847cb167460d715215feb
       - REACT_APP_NOVA_TOKEN_ADDRESS=0x4c4fa7e8ea4cfcfc93deae2c0cff142a1dd3a218
       - REACT_APP_WETH_TOKEN_ADDRESS=0x4a817489643A89a1428b2DD441c3fbe4DBf44789
@@ -55,8 +55,10 @@ services:
 
   admin: &admin_default
     image: novaprotocolio/nova-scaffold-dex-backend:latest
+    # image: golang:1.12
     container_name: nova-scaffold-dex-admin-api
     command: go run cli/adminapi/main.go
+    # command: sleep 100000000
     ports:
       - 3003:3003
     environment:
@@ -97,6 +99,7 @@ services:
       - 4001:4001
     environment:
       - NSK_LOG_LEVEL=DEBUG
+      - NSK_PORT=3001
       - METRICS_PORT=4001
 
   ws:
@@ -108,6 +111,8 @@ services:
       - 4002:4002
     environment:
       - NSK_LOG_LEVEL=DEBUG
+      - NSK_API_URL=http://api:3001
+      - NSK_PORT=3002
       - METRICS_PORT=4002
 
   watcher:
@@ -124,6 +129,7 @@ services:
     <<: *admin_default
     container_name: nova-scaffold-dex-engine
     command: go run cli/engine/main.go
+    ports: []
     environment:
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4004
@@ -132,6 +138,7 @@ services:
     <<: *admin_default
     container_name: nova-scaffold-dex-launcher
     command: go run cli/launcher/main.go
+    ports: []
     environment:
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4005
@@ -144,8 +151,8 @@ services:
     environment:
       - BOT_TYPE=CONST_PRODUCT
       - BOT_PRIVATE_KEY=0xa6553a3cbade744d6c6f63e557345402abd93e25cd1f1dba8bb0d374de2fcf4f
-      - BOT_BASE_TOKEN=HOT
-      - BOT_QUOTE_TOKEN=DAI
+      - BOT_BASE_TOKEN=NOVA
+      - BOT_QUOTE_TOKEN=WETH
       - BOT_BASE_URL=http://api:3001
       - BOT_MIN_PRICE=0.8
       - BOT_MAX_PRICE=1.2
