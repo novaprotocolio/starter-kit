@@ -53,10 +53,9 @@ services:
     logging:
       <<: *logging_default
 
-  admin:
+  admin: &admin_default
     image: novaprotocolio/nova-scaffold-dex-backend:latest
     container_name: nova-scaffold-dex-admin-api
-    # command: /bin/adminapi
     command: go run cli/adminapi/main.go
     ports:
       - 3003:3003
@@ -74,7 +73,12 @@ services:
       - NSK_PROXY_ADDRESS=0x04f67e8b7c39a25e100847cb167460d715215feb
       - NSK_RELAYER_ADDRESS=0x93388b4efe13b9b18ed480783c05462409851547
       - NSK_PORT=3003
+    working_dir: /workspace
     volumes:
+      - ./backend:/workspace
+      - ./go-ethereum:/go-ethereum
+      - ./sdk-backend:/sdk-backend
+      - ./novalex-dex-protocol/orderbook:/novalex-dex-protocol/orderbook
       - datavolume:/data
     depends_on:
       - db
@@ -83,125 +87,55 @@ services:
     restart: always
     logging:
       <<: *logging_default
+
   api:
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
+    <<: *admin_default
     container_name: nova-scaffold-dex-api
-    # command: /bin/api
     command: go run cli/api/main.go
     ports:
       - 3001:3001
       - 4001:4001
     environment:
-      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
-      - NSK_REDIS_URL=redis://redis:6379/0
-      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5c0286bef1434b07202a5ae3de38e66130d5280d
-      - NSK_BLOCKCHAIN_RPC_URL=http://ethereum-node:8545
-      - NSK_NOVA_TOKEN_ADDRESS=0x4c4fa7e8ea4cfcfc93deae2c0cff142a1dd3a218
-      - NSK_PROXY_ADDRESS=0x04f67e8b7c39a25e100847cb167460d715215feb
-      - NSK_RELAYER_ADDRESS=0x93388b4efe13b9b18ed480783c05462409851547
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4001
-      - NSK_PORT=3001
-      - NSK_PROXY_MODE=deposit
-    volumes:
-      - datavolume:/data
-    depends_on:
-      - db
-      - redis
-      - ethereum-node
-    restart: always
-    logging:
-      <<: *logging_default
+
   ws:
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
+    <<: *admin_default
     container_name: nova-scaffold-dex-ws
-    # command: /bin/websocket
     command: go run cli/websocket/main.go
     ports:
       - 3002:3002
       - 4002:4002
     environment:
-      - NSK_API_URL=http://api:3001
-      - NSK_REDIS_URL=redis://redis:6379/0
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4002
-      - NSK_PORT=3002
-    volumes:
-      - datavolume:/data
-    depends_on:
-      - redis
-      - api
-    restart: always
-    logging:
-      <<: *logging_default
+
   watcher:
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
+    <<: *admin_default
     container_name: nova-scaffold-dex-watcher
-    # command: /bin/watcher
     command: go run cli/watcher/main.go
     ports:
       - 4003:4003
     environment:
-      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
-      - NSK_REDIS_URL=redis://redis:6379/0
-      - NSK_BLOCKCHAIN_RPC_URL=http://ethereum-node:8545
       - NSK_LOG_LEVEL=DEBUG
-      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5c0286bef1434b07202a5ae3de38e66130d5280d
       - METRICS_PORT=4003
-    volumes:
-      - datavolume:/data
-    depends_on:
-      - redis
-      - ethereum-node
-      - db
-    restart: always
-    logging:
-      <<: *logging_default
+
   engine:
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
+    <<: *admin_default
     container_name: nova-scaffold-dex-engine
-    # command: /bin/engine
     command: go run cli/engine/main.go
-    ports:
-      - 4004:4004
     environment:
-      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
-      - NSK_REDIS_URL=redis://redis:6379/0
-      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5c0286bef1434b07202a5ae3de38e66130d5280d
-      - NSK_PROXY_ADDRESS=0x04f67e8b7c39a25e100847cb167460d715215feb
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4004
-    volumes:
-      - datavolume:/data
-    depends_on:
-      - redis
-      - db
-    restart: always
-    logging:
-      <<: *logging_default
+
   launcher:
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
+    <<: *admin_default
     container_name: nova-scaffold-dex-launcher
-    # command: /bin/launcher
     command: go run cli/launcher/main.go
-    ports:
-      - 4005:4005
     environment:
-      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
-      - NSK_BLOCKCHAIN_RPC_URL=http://ethereum-node:8545
-      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5c0286bef1434b07202a5ae3de38e66130d5280d
-      - NSK_RELAYER_ADDRESS=0x93388b4efe13b9b18ed480783c05462409851547
-      - NSK_RELAYER_PK=95b0a982c0dfc5ab70bf915dcf9f4b790544d25bc5e6cff0f38a59d0bba58651
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4005
-    volumes:
-      - datavolume:/data
-    depends_on:
-      - ethereum-node
-      - db
-    restart: always
-    logging:
-      <<: *logging_default
+
   maker:
     image: novaprotocolio/amm-bots:latest
     container_name: nova-scaffold-dex-maker

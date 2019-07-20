@@ -1,10 +1,10 @@
-![image](docs/assets/logo.png)
+![image](assets/logo.png)
 
 ---
 
 [Nova Protocol](https://novaprotocol.io) is an open source framework for building decentralized exchanges.
 
-More detailed information can be found in our [developer documentation](https://developer.novaprotocol.io/docs/overview/getting-started.html).
+More detailed information can be found in our [developer documentation](https://developer.novaprotocol.io/overview/getting-started.html).
 
 Building on Nova? Come chat with our team on our [Nova Relayer Slack Channel](https://join.slack.com/t/novarelayer/shared_invite/enQtNTc1Mjc3MDUyNTkzLWNmZjI0YmFhNTg4OTU4NTI5ZWE1MzY1ZTc1MDMyYmE1YzkwYWUwYzQ2MTNhMTRjNmVjMmEyOTRkMjFlNzAyMTQ).
 
@@ -19,7 +19,7 @@ This repository provides a basic template for building a Decentralized Exchange 
 - Performed some trades on your DEX
 - Learned how to customize your DEX: change fees, add markets, etc.
 
-![web-screen-shot](docs/assets/novalex_dex_scaffold_screenshot.jpg)
+![web-screen-shot](assets/novalex_dex_scaffold_screenshot.jpg)
 
 It should take less than 10 minutes to get your DEX running.
 
@@ -27,7 +27,7 @@ It should take less than 10 minutes to get your DEX running.
 
 Go to [DEVNET](devnet/README.md) for more detail
 
-![web-screen-shot](docs/assets/devnet.png)
+![web-screen-shot](assets/devnet.png)
 
 # Document
 
