@@ -1,0 +1,166 @@
+version: '3'
+volumes:
+  datavolume: {}
+services:
+  redis:
+    container_name: nova-scaffold-dex-redis
+    image: redis:5.0
+    ports:
+      - 6379:6379
+    restart: always
+    logging: &logging_default
+      driver: 'json-file'
+      options:
+        max-file: '5'
+        max-size: '200m'
+        compress: 'true'
+  db:
+    container_name: nova-scaffold-dex-pg
+    image: postgres
+    ports:
+      - 5432:5432
+    restart: always
+    logging:
+      <<: *logging_default
+    volumes:
+      - datavolume:/var/lib/postgresql/data
+      - ./backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
+      - ./envs/rinkeby/seed.sql:/docker-entrypoint-initdb.d/0002-seed.sql
+  web:
+    build: ./web
+    container_name: nova-scaffold-dex-web
+    ports:
+      - 3000:8043
+    environment:
+      - CONFIG_VARS=REACT_APP_API_URL,REACT_APP_WS_URL,REACT_APP_NODE_URL,REACT_APP_NOVA_PROXY_ADDRESS,REACT_APP_NOVA_TOKEN_ADDRESS,REACT_APP_WETH_TOKEN_ADDRESS,REACT_APP_NETWORK_ID
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3002
+      - REACT_APP_NODE_URL=https://rinkeby.infura.io/v3/cabc724fb9534d1bb245582a74ccf3e7
+      - REACT_APP_NOVA_PROXY_ADDRESS=0x67a4e271949cd9a5b704904fc316ef507d8c7beb
+      - REACT_APP_NOVA_TOKEN_ADDRESS=0xd586fefc58865884d1ba69646c9ed587ce9dd0e6
+      - REACT_APP_WETH_TOKEN_ADDRESS=0xc778417e063141139fce010982780140aa0cd5ab
+      - REACT_APP_NETWORK_ID=4
+    restart: always
+    logging:
+      <<: *logging_default
+  admin:
+    build: ./backend
+    container_name: nova-scaffold-dex-admin-api
+    command: /bin/adminapi
+    ports:
+      - 3003:3003
+    environment:
+      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - NSK_REDIS_URL=redis://redis:6379/0
+      - NSK_BLOCKCHAIN_RPC_URL=https://rinkeby.infura.io/v3/cabc724fb9534d1bb245582a74ccf3e7
+      - NSK_LOG_LEVEL=ERROR
+      - WEB_HEALTH_CHECK_URL=http://web:8043
+      - API_HEALTH_CHECK_URL=http://api:4001/metrics
+      - ENGINE_HEALTH_CHECK_URL=http://engine:4004/metrics
+      - LAUNCHER_HEALTH_CHECK_URL=http://launcher:4005/metrics
+      - WATCHER_HEALTH_CHECK_URL=http://watcher:4003/metrics
+      - WEBSOCKET_HEALTH_CHECK_URL=http://ws:4002/metrics
+      - NSK_PROXY_ADDRESS=0x67a4e271949cd9a5b704904fc316ef507d8c7beb
+      - NSK_RELAYER_ADDRESS=___CHANGE_ME___
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - db
+      - redis
+    restart: always
+    logging:
+      <<: *logging_default
+  api:
+    build: ./backend
+    container_name: nova-scaffold-dex-api
+    command: /bin/api
+    ports:
+      - 3001:3001
+    environment:
+      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - NSK_REDIS_URL=redis://redis:6379/0
+      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5842e020ce9928f878777c1e3b62a790e425fcc4
+      - NSK_BLOCKCHAIN_RPC_URL=https://rinkeby.infura.io/v3/cabc724fb9534d1bb245582a74ccf3e7
+      - NSK_NOVA_TOKEN_ADDRESS=0xd586fefc58865884d1ba69646c9ed587ce9dd0e6
+      - NSK_PROXY_ADDRESS=0x67a4e271949cd9a5b704904fc316ef507d8c7beb
+      - NSK_RELAYER_ADDRESS=___CHANGE_ME___
+      - NSK_LOG_LEVEL=DEBUG
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - db
+      - redis
+    restart: always
+    logging:
+      <<: *logging_default
+  ws:
+    build: ./backend
+    container_name: nova-scaffold-dex-ws
+    command: /bin/websocket
+    ports:
+      - 3002:3002
+    environment:
+      - NSK_API_URL=http://api:3001
+      - NSK_REDIS_URL=redis://redis:6379/0
+      - NSK_LOG_LEVEL=DEBUG
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - redis
+      - api
+    restart: always
+    logging:
+      <<: *logging_default
+  watcher:
+    build: ./backend
+    container_name: nova-scaffold-dex-watcher
+    command: /bin/watcher
+    environment:
+      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - NSK_REDIS_URL=redis://redis:6379/0
+      - NSK_BLOCKCHAIN_RPC_URL=https://rinkeby.infura.io/v3/cabc724fb9534d1bb245582a74ccf3e7
+      - NSK_LOG_LEVEL=DEBUG
+      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5842e020ce9928f878777c1e3b62a790e425fcc4
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - redis
+      - db
+    restart: always
+    logging:
+      <<: *logging_default
+  engine:
+    build: ./backend
+    container_name: nova-scaffold-dex-engine
+    command: /bin/engine
+    environment:
+      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - NSK_REDIS_URL=redis://redis:6379/0
+      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5842e020ce9928f878777c1e3b62a790e425fcc4
+      - NSK_LOG_LEVEL=DEBUG
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - redis
+      - db
+    restart: always
+    logging:
+      <<: *logging_default
+  launcher:
+    build: ./backend
+    container_name: nova-scaffold-dex-launcher
+    command: /bin/launcher
+    environment:
+      - NSK_DATABASE_URL=postgres://postgres:postgres@db/postgres?sslmode=disable
+      - NSK_BLOCKCHAIN_RPC_URL=https://rinkeby.infura.io/v3/cabc724fb9534d1bb245582a74ccf3e7
+      - NSK_HYBRID_EXCHANGE_ADDRESS=0x5842e020ce9928f878777c1e3b62a790e425fcc4
+      - NSK_RELAYER_ADDRESS=___CHANGE_ME___
+      - NSK_RELAYER_PK=___CHANGE_ME___
+      - NSK_LOG_LEVEL=DEBUG
+    volumes:
+      - datavolume:/data
+    depends_on:
+      - db
+    restart: always
+    logging:
+      <<: *logging_default
