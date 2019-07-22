@@ -21,6 +21,9 @@ services:
     ports:
       - 8545:8545
     restart: always
+    # uncomment this to persist the blockchain data
+    # volumes:
+    #   - ../test-node/data:/data
     logging:
       <<: *logging_default
   db:
