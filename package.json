@@ -2,7 +2,7 @@
   "name": "NovalexStarterKit",
   "license": "MIT",
   "scripts": {
-    "docs": "yarn docsify serve docs",
+    "docs": "yarn docsify serve ../docs",
     "web": "cd web && yarn start",
     "watch": "./watcher.sh"
   },
