@@ -121,7 +121,7 @@ services:
       - LAUNCHER_HEALTH_CHECK_URL=http://launcher:4005/metrics
       - WATCHER_HEALTH_CHECK_URL=http://watcher:4003/metrics
       - WEBSOCKET_HEALTH_CHECK_URL=http://ws:4002/metrics
-      - NSK_PROXY_ADDRESS=0x04f67e8b7c39a25e100847cb167460d715215feb
+      - NSK_PROXY_ADDRESS=0x1D52a52f5996FDff37317a34EBFbeC7345Be3b55
       - NSK_RELAYER_ADDRESS=0x93388b4efe13b9b18ed480783c05462409851547
       - NSK_PORT=3003
     working_dir: /workspace
