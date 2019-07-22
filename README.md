@@ -29,6 +29,10 @@ Go to [DEVNET](devnet/README.md) for more detail
 
 ![web-screen-shot](assets/devnet.png)
 
+# Development
+
+`yarn ln && yarn start`
+
 # Document
 
 If you want to see more detail, you can start serving docs:

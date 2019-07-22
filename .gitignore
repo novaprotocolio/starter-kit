@@ -11,3 +11,7 @@ build
 yarn.lock
 docker-compose-*source-go-vendor.yaml
 node_modules
+backend
+go-ethereum
+novalex-dex-protocol
+sdk-backend

@@ -3,7 +3,10 @@
   "license": "MIT",
   "scripts": {
     "docs": "yarn docsify serve ../docs",
-    "web": "cd web && yarn start",
+    "web": "cd ../web && yarn start",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "ln": "./link.sh",
     "watch": "./watcher.sh"
   },
   "devDependencies": {
