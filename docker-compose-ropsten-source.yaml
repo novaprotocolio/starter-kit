@@ -24,7 +24,7 @@ services:
       <<: *logging_default
     volumes:
       - datavolume:/var/lib/postgresql/data
-      - ./backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
+      -../backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
       - ./envs/ropsten/seed.sql:/docker-entrypoint-initdb.d/0002-seed.sql
   web:
     build: ./web
