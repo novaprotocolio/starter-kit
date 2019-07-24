@@ -57,10 +57,10 @@ services:
       - 8545:8545
     working_dir: /cmd/nova
     volumes:
-      - ./devnet:/workspace
-      - ./go-ethereum:/go-ethereum
-      - ./cmd/nova:/cmd/nova
-      - ./novalex-dex-protocol/orderbook:/novalex-dex-protocol/orderbook
+      - ../devnet:/workspace
+      - ../novalex:/novalex
+      - ../cmd/nova:/cmd/nova
+      - ../orderbook:/orderbook
     restart: always
     logging:
       <<: *logging_default
@@ -126,10 +126,10 @@ services:
       - NSK_PORT=3003
     working_dir: /workspace
     volumes:
-      - ./backend:/workspace
-      - ./go-ethereum:/go-ethereum
-      - ./sdk-backend:/sdk-backend
-      - ./novalex-dex-protocol/orderbook:/novalex-dex-protocol/orderbook
+      - ../backend:/workspace
+      - ../novalex:/novalex
+      - ../sdk-backend:/sdk-backend
+      - ../orderbook:/orderbook
       - datavolume:/data
     depends_on:
       - db

@@ -31,7 +31,7 @@ Go to [DEVNET](devnet/README.md) for more detail
 
 # Development
 
-`yarn ln && yarn start`
+`yarn start`
 
 # Document
 

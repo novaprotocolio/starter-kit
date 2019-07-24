@@ -80,10 +80,10 @@ services:
       - NSK_PORT=3003
     working_dir: /workspace
     volumes:
-      - ./backend:/workspace
-      - ./go-ethereum:/go-ethereum
-      - ./sdk-backend:/sdk-backend
-      - ./novalex-dex-protocol/orderbook:/novalex-dex-protocol/orderbook
+      - ../backend:/workspace
+      - ../novalex:/novalex
+      - ../sdk-backend:/sdk-backend
+      - ../orderbook:/orderbook
       - datavolume:/data
     depends_on:
       - db
