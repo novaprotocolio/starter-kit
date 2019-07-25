@@ -1,13 +1,6 @@
 version: '3'
 volumes:
   datavolume: {}
-networks:
-  chainnet:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.25.0.0/24
-
 services:
   redis:
     container_name: nova-scaffold-dex-redis
@@ -21,93 +14,54 @@ services:
         max-file: '5'
         max-size: '200m'
         compress: 'true'
-
+  ethereum-node:
+    container_name: nova-scaffold-dex-ethereum-node
+    # image: novaprotocolio/nova-scaffold-dex-ethereum-node:latest
+    image: novaprotocolio/ethereum-test-node:latest
+    ports:
+      - 8545:8545
+    restart: always
+    # uncomment this to persist the blockchain data
+    # volumes:
+    #   - ../test-node/data:/data
+    logging:
+      <<: *logging_default
   db:
     container_name: nova-scaffold-dex-pg
     image: postgres
     ports:
       - 5432:5432
     restart: always
+    logging:
+      <<: *logging_default
     volumes:
       - datavolume:/var/lib/postgresql/data
-      - ./backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
+      - ../backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
       - ./envs/localhost/seed.sql:/docker-entrypoint-initdb.d/0002-seed.sql
-    logging:
-      <<: *logging_default
-
-  ethereum-node: &ethereum_default
-    container_name: nova-scaffold-dex-ethereum-node
-    image: novaprotocolio/nova-scaffold-dex-ethereum-node:latest
-    environment:
-      - DATA_DIR=/workspace/node1
-      - NETWROK_ID=66
-      - BOOTNODES=enode://6cf1b4f4391d387904c48fc18403b49d0df0588e0a20511f0ff830de30867f3e12daaf6138ccfc2583b4b76b7b5bc0b7493e1ae1cb5ae951cd1f6221b147ec50@172.25.0.103:30301
-      - ACCOUNT=0x31Ebd457b999Bf99759602f5Ece5AA5033CB56B3
-    command:
-      - bash
-      - '-c'
-      - |
-        go run ./*.go --datadir $$DATA_DIR --syncmode 'full' \
-        --port 30311 --rpc --rpcaddr '0.0.0.0' --rpcport 8545 --wsport 8546 \
-        --rpcapi 'personal,db,eth,net,web3,txpool,miner,orderbook' --rpc --rpccorsdomain '*' \
-        --targetgaslimit 94000000 --bootnodes $$BOOTNODES \
-        --networkid $$NETWROK_ID --gasprice '1' --unlock $$ACCOUNT \
-        --password $$DATA_DIR/password.txt --mine
-    ports:
-      - 8545:8545
-    working_dir: /cmd/nova
-    volumes:
-      - ../devnet:/workspace
-      - ../novalex:/novalex
-      - ../cmd/nova:/cmd/nova
-      - ../orderbook:/orderbook
-    restart: always
-    logging:
-      <<: *logging_default
-    networks:
-      chainnet:
-        ipv4_address: 172.25.0.101
-
-  ethereum-node2:
-    <<: *ethereum_default
-    container_name: nova-scaffold-dex-ethereum-node2
-    ports:
-      - 8546:8545
-    environment:
-      - DATA_DIR=/workspace/node2
-      - NETWROK_ID=66
-      - BOOTNODES=enode://6cf1b4f4391d387904c48fc18403b49d0df0588e0a20511f0ff830de30867f3e12daaf6138ccfc2583b4b76b7b5bc0b7493e1ae1cb5ae951cd1f6221b147ec50@172.25.0.103:30301
-      - ACCOUNT=0xbd89f54c601cfee303ed61b9b5ae3be21cc09d66
-    networks:
-      chainnet:
-        ipv4_address: 172.25.0.102
-
-  bootnode:
-    <<: *ethereum_default
-    container_name: nova-scaffold-dex-boot-node
-    ports:
-      - 30301:30301
-    command: go run cmd/bootnode/main.go -nodekey /workspace/boot.key -addr :30301 -verbosity 5
-    working_dir: /go-ethereum
-    networks:
-      chainnet:
-        ipv4_address: 172.25.0.103
-
   web:
-    build: ./web
+    image: novaprotocolio/nova-scaffold-dex-web:latest
     container_name: nova-scaffold-dex-web
     ports:
       - 3000:8043
     environment:
       - CONFIG_VARS=REACT_APP_API_URL,REACT_APP_WS_URL,REACT_APP_NODE_URL,REACT_APP_NOVA_PROXY_ADDRESS,REACT_APP_NOVA_TOKEN_ADDRESS,REACT_APP_WETH_TOKEN_ADDRESS,REACT_APP_NETWORK_ID
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3002
+      - REACT_APP_NODE_URL=http://localhost:8545
+      - REACT_APP_NOVA_PROXY_ADDRESS=0x1D52a52f5996FDff37317a34EBFbeC7345Be3b55
+      - REACT_APP_NOVA_TOKEN_ADDRESS=0x224E34A640FC4108FABDb201eD85D909059105fA
+      - REACT_APP_WETH_TOKEN_ADDRESS=0x7Cb242e4f8EE3FE4F1f244209c05B794F192353E
+      - REACT_APP_NETWORK_ID=66
     restart: always
     logging:
       <<: *logging_default
 
   admin: &admin_default
     image: novaprotocolio/nova-scaffold-dex-backend:latest
+    # image: golang:1.12
     container_name: nova-scaffold-dex-admin-api
     command: go run cli/adminapi/main.go
+    # command: sleep 100000000
     ports:
       - 3003:3003
     environment:
@@ -148,6 +102,7 @@ services:
       - 4001:4001
     environment:
       - NSK_LOG_LEVEL=DEBUG
+      - NSK_PORT=3001
       - METRICS_PORT=4001
 
   ws:
@@ -159,6 +114,8 @@ services:
       - 4002:4002
     environment:
       - NSK_LOG_LEVEL=DEBUG
+      - NSK_API_URL=http://api:3001
+      - NSK_PORT=3002
       - METRICS_PORT=4002
 
   watcher:
@@ -175,6 +132,7 @@ services:
     <<: *admin_default
     container_name: nova-scaffold-dex-engine
     command: go run cli/engine/main.go
+    ports: []
     environment:
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4004
@@ -183,20 +141,23 @@ services:
     <<: *admin_default
     container_name: nova-scaffold-dex-launcher
     command: go run cli/launcher/main.go
+    ports: []
     environment:
       - NSK_LOG_LEVEL=DEBUG
       - METRICS_PORT=4005
 
   maker:
-    image: novaprotocolio/amm-bots
+    image: novaprotocolio/amm-bots:latest
+    # image: golang:1.12
     container_name: nova-scaffold-dex-maker
+    # command: go run main.go
     depends_on:
       - api
     environment:
       - BOT_TYPE=CONST_PRODUCT
       - BOT_PRIVATE_KEY=0xa6553a3cbade744d6c6f63e557345402abd93e25cd1f1dba8bb0d374de2fcf4f
-      - BOT_BASE_TOKEN=HOT
-      - BOT_QUOTE_TOKEN=DAI
+      - BOT_BASE_TOKEN=NOVA
+      - BOT_QUOTE_TOKEN=WETH
       - BOT_BASE_URL=http://api:3001
       - BOT_MIN_PRICE=0.8
       - BOT_MAX_PRICE=1.2
@@ -204,5 +165,8 @@ services:
       - BOT_EXPAND_INVENTORY=2
       - BOT_WEB3_URL=http://ethereum-node:8545
     restart: on-failure:10
+    # working_dir: /workspace
+    # volumes:
+    #   - ../bots:/workspace
     logging:
       <<: *logging_default
