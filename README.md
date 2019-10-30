@@ -33,6 +33,19 @@ Go to [DEVNET](devnet/README.md) for more detail
 
 `yarn start`
 
+# Hot-reload a module
+
+```bash
+docker-compose -f docker-compose-localhost.yaml stop api watcher admin launcher engine watcher ws
+NSK_LOG_LEVEL=DEBUG METRICS_PORT=4003 yarn watch watcher
+NSK_PORT=3003 yarn watch admin
+yarn watch maker
+NSK_LOG_LEVEL=DEBUG NSK_API_URL=http://localhost:3001 NSK_PORT=3002 METRICS_PORT=4002 yarn watch ws
+METRICS_PORT=4001 NSK_PORT=3001 NSK_LOG_LEVEL=DEBUG yarn watch api
+NSK_LOG_LEVEL=DEBUG METRICS_PORT=4005 yarn watch launcher
+NSK_LOG_LEVEL=DEBUG METRICS_PORT=4004 yarn watch engine
+```
+
 # Document
 
 If you want to see more detail, you can start serving docs:
