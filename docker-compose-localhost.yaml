@@ -56,9 +56,8 @@ services:
     logging:
       <<: *logging_default
 
-  admin: &admin_default
-    image: novaprotocolio/nova-scaffold-dex-backend:latest
-    # image: golang:1.12
+  admin: &admin_default # image: novaprotocolio/nova-scaffold-dex-backend:latest
+    image: golang:1.13
     container_name: nova-scaffold-dex-admin-api
     command: go run cli/adminapi/main.go
     # command: sleep 100000000
