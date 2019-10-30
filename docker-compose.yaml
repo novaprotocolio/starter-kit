@@ -149,7 +149,8 @@ services:
       - db
       - redis
       - ethereum-node
-    restart: always
+    # restart: always
+    restart: unless-stopped
     logging:
       <<: *logging_default
     networks:
